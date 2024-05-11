@@ -210,7 +210,7 @@ class AnonymousWalks(object):
         return int(estimation) + 1
 
     def _random_step_node(self, node):
-        '''Moves one step from the current according to probabilities of outgoing edges.
+        '''Moves one step from the current node according to probabilities of outgoing edges.
         Return next node.'''
         if self.rw_graph is None:
             raise ValueError("Create a Random Walk graph first with {}".format(self.create_random_walk_graph.__name__))
