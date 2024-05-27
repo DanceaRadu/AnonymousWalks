@@ -26,9 +26,7 @@ from sklearn.model_selection import train_test_split
 SEED = 42
 
 class AWE:
-    '''
-    Computes distributed Anonymous Walk Embeddings.
-    '''
+
     def __init__(self,
                  dataset='imdb_b',
                  batch_size=128,
@@ -47,7 +45,7 @@ class AWE:
                  batches_per_epoch=1,
                  candidate_func=None,
                  graph_labels=None,
-                 regenerate_corpus=False,
+                 regenerate_corpus=True,
                  neighborhood_size=1,
                  results_folder='./results'):
         '''
@@ -128,7 +126,6 @@ class AWE:
         if self.regenerate_corpus or not os.path.exists(corpus_path):
             if not os.path.exists(corpus_path):
                 os.mkdir(corpus_path)
-
             for en, graph_fn in enumerate(self.sorted_graphs):
                 if en > 0 and not en % 100:
                     print(f"Graph {en}")
@@ -150,7 +147,7 @@ class AWE:
         elif self.optimize == 'SGD':
             self.optimizer = optim.SGD(self.model.parameters(), lr=self.learning_rate)
 
-        self.criterion = nn.CrossEntropyLoss()
+        self.criterion = nn.NLLLoss()
 
     def _train_thread_body(self):
         '''Train model on random anonymous walk batches.'''
@@ -166,7 +163,7 @@ class AWE:
                                                                     self.nodes_per_graphs[self.doc_id])
             # Convert to PyTorch tensors
             batch_data = torch.tensor(batch_data, dtype=torch.long)
-            batch_labels = torch.tensor(batch_labels, dtype=torch.long)
+            batch_labels = torch.tensor(batch_labels, dtype=torch.long).squeeze()
 
             self.optimizer.zero_grad()
             outputs = self.model(batch_data)
@@ -244,3 +241,39 @@ class AWEModel(nn.Module):
         embed = torch.cat(embed, 1)
         output = self.linear(embed)
         return output
+    
+dataset = 'mutag'
+
+batch_size = 100
+window_size = 8
+neighborhood_size = 10
+embedding_size_w = 128
+embedding_size_d = 128
+num_samples = 32
+
+concat = False
+loss_type = 'sampled_softmax'
+optimize = 'Adagrad'
+learning_rate = 1.0
+root = 'Datasets/'
+ext = 'graphml'
+steps = 7
+epochs = 1
+batches_per_epoch = 50
+candidate_func = None
+graph_labels = None
+
+awe = AWE(dataset = dataset, batch_size = batch_size, window_size = window_size,
+                  embedding_size_w = embedding_size_w, embedding_size_d = embedding_size_d,
+                  num_samples = num_samples, concat = concat, loss_type = loss_type,
+                  optimize = optimize, learning_rate = learning_rate, root = root,
+                  ext = ext, steps = steps, epochs = epochs, batches_per_epoch = batches_per_epoch,
+                  candidate_func = candidate_func, graph_labels=graph_labels, neighborhood_size=neighborhood_size)
+
+print()
+start2emb = time.time()
+print(awe.nodes_per_graphs)
+awe.train() # get embeddings
+finish2emb = time.time()
+print()
+print('Time to compute embeddings: {:.2f} sec'.format(finish2emb - start2emb))
