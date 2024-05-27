@@ -203,7 +203,7 @@ class AWE:
             print('Time for epoch {}: {:.2f}'.format(ep, time.time() - time2epoch))
             # save temporary embeddings
             if not ep % 10:
-                torch.save(self.model.state_dict(), f"{self.results_folder}/{self.dataset}/tmp/embeddings_{ep}.pth")
+                torch.save(self.model.state_dict(), f"{self.results_folder}/{self.dataset}/embeddings_{ep}.pth")
 
         return self.model.state_dict()
 
